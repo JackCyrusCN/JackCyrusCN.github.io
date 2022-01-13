@@ -71,6 +71,57 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-oracle" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/01/14/oracle/" class="article-date">
+  <time class="dt-published" datetime="2022-01-13T16:08:13.000Z" itemprop="datePublished">2022-01-14</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/01/14/oracle/">oracle</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <ol>
+<li><p>再使用到oracle的自增主键时，要将获取主键的方法放在insert中（不能放在select中），且要使用自定义方法来获取主键，直接使用.nextval方法也会导致在未insert时，使序列新增查询结果的条数。</p>
+</li>
+<li><p>在()中的语句，默认会使用括号中的作为字段的值，所以需求写明表的关系(不会显示出错，未指明哪个表的字段).(目前在not exists中发现问题，其他关键字待测试)</p>
+</li>
+<li><p>oracle的dblink使用索引问题（目前测试结果是无法使用）</p>
+</li>
+<li><p>使用listagg时，如果存在可能超过4000字符的情况，应使用xmlagg</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">listagg</span>(t.col1, <span class="string">&#x27;,&#x27;</span>) <span class="keyword">within</span> <span class="keyword">group</span> (<span class="keyword">order</span> <span class="keyword">by</span> t.col2) col_display <span class="keyword">FROM</span> table_name t;</span><br></pre></td></tr></table></figure>
+
+<p>=&gt;</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> wmlagg(xmlparse(content t.col1 <span class="operator">||</span> <span class="string">&#x27;,&#x27;</span> wellformed) <span class="keyword">order</span> <span class="keyword">by</span> t.col2).getclobval() col_display <span class="keyword">FROM</span> table_name t;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/01/14/oracle/" data-id="ckyd66f1p000334urbbeneel3" data-title="oracle" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-VsCode" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/01/14/VsCode/" class="article-date">
@@ -178,7 +229,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/01/14/VsCode/" data-id="ckyd5pfod0000fcur63jecdce" data-title="VsCode" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/01/14/VsCode/" data-id="ckyd66f1j000034urcsb95rvo" data-title="VsCode" class="article-share-link">Share</a>
       
       
       
@@ -219,7 +270,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/12/27/my-new-post/" data-id="ckxourslx00009curhyxr9yxk" data-title="my new post" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2021/12/27/my-new-post/" data-id="ckyd66f1o000234ure0673059" data-title="my new post" class="article-share-link">Share</a>
       
       
       
@@ -270,7 +321,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/12/27/hello-world/" data-id="ckxouni9m0000c8ur5fv03i5r" data-title="Hello World" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2021/12/27/hello-world/" data-id="ckyd66f1m000134ur364jb9e7" data-title="Hello World" class="article-share-link">Share</a>
       
       
       
@@ -311,6 +362,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2022/01/14/oracle/">oracle</a>
+          </li>
         
           <li>
             <a href="/2022/01/14/VsCode/">VsCode</a>
