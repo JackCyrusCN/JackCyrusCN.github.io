@@ -71,6 +71,79 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-关于Spring-AOP中JDK动态代理中使用匿名内部类对InvocationHandler接口的传参" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/01/28/%E5%85%B3%E4%BA%8ESpring-AOP%E4%B8%ADJDK%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E5%AF%B9InvocationHandler%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%BC%A0%E5%8F%82/" class="article-date">
+  <time class="dt-published" datetime="2022-01-27T16:44:45.000Z" itemprop="datePublished">2022-01-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/01/28/%E5%85%B3%E4%BA%8ESpring-AOP%E4%B8%ADJDK%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E5%AF%B9InvocationHandler%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%BC%A0%E5%8F%82/">关于Spring AOP中JDK动态代理中使用匿名内部类对InvocationHandler接口的传参</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>我所使用的是virtualbox,网络选择的是网络地址转换(NAT)</p>
+<h2 id="nacos-docker和docker-compse"><a href="#nacos-docker和docker-compse" class="headerlink" title="nacos-docker和docker-compse"></a>nacos-docker和docker-compse</h2><p> 小白花了近两天时间研究nacos集群，以下内容如有问题或需要改进的地方欢迎指正</p>
+<p>vbox的网络我所选择的是网络地址转换(NAT)</p>
+<p>使用nacos-docker和docker-compose</p>
+<ol>
+<li><p>需要在虚拟机上安装docker-compose:(使用国内镜像),最后一行确认版本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl -L https://get.daocloud.io/docker/compose/releases/download/1.25.2/docker-compose-`uname -s`-`uname -m` &gt; /usr/<span class="built_in">local</span>/bin/docker-compose</span><br><span class="line">$ chmod +x /usr/<span class="built_in">local</span>/bin/docker-compose</span><br><span class="line">$ docker-compose --version   </span><br></pre></td></tr></table></figure></li>
+<li><p>下载并开启nacos集群和mysql(cluster-hostname.yaml内配置自行修改) [github:nacos-docker][<a target="_blank" rel="noopener" href="https://github.com/nacos-group/nacos-docker]">https://github.com/nacos-group/nacos-docker]</a></p>
+</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> --depth 1 https://github.com/nacos-group/nacos-docker.git</span><br><span class="line">$ <span class="built_in">cd</span> nacos-docker</span><br><span class="line">$ docker-compose -f example/cluster-hostname.yaml up</span><br></pre></td></tr></table></figure>
+
+<p>其中mysql数据库如未修改cluster-hostname.yaml配置:其默认用户密码:root/root ,nacos数据库名为nacos_devtest</p>
+<p>3.下载数据并安装nginx,在centos7中新建文件/data/docker/nginx/nacos/default.conf(路径自行决定),其内容如下</p>
+<p>(IP地址,使用docker inspect nacos1 nacos2 nacos3 | grep IPAddress可知)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">upstream nacos-cluster &#123;</span><br><span class="line">     server IP1:8848;</span><br><span class="line">     server IP2:8849;</span><br><span class="line">     server IP3:8850;</span><br><span class="line">&#125;</span><br><span class="line">server &#123;</span><br><span class="line"> listen 1111;</span><br><span class="line"> location /&#123;</span><br><span class="line">        proxy_pass http://nacos-cluster;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意这里还需要查出nacos集群所使用的network(默认使用bridge),或者使用ghost等其他技术实现docker内容器的互通,使用下面的语句得知nacos集群的network</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker inspect nacos01 | grep NetworkMode</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;NetworkMode&quot;: &quot;example_default&quot;</span><br></pre></td></tr></table></figure>
+
+<p>并用以下语句启动nginx(–netwrok 的值添入上面所查询出的值:example_default)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run --name nginx -p 1111:1111 \</span><br><span class="line">-v  /data/docker/nginx/nacos/default.conf:/etc/nginx/conf.d/default.conf  \</span><br><span class="line">--network example_default \</span><br><span class="line">--privileged=<span class="literal">true</span> \</span><br><span class="line">-d nginx</span><br></pre></td></tr></table></figure>
+
+<p>接下来回来virtualbox进行端口映射1111端口,即可在主机进行访问nacos集群</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">localhost:1111/nacos</span><br></pre></td></tr></table></figure>
+
+
+
+<p>下面两种方法也可以实现nginx+nacos集群+mysql的功能，这里就不作细致的说明了：</p>
+<ol>
+<li>修改linux的配置,启动不同的端口三次</li>
+<li>使用docker,跑3个nacos,1个mysql和1个 nginx</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/01/28/%E5%85%B3%E4%BA%8ESpring-AOP%E4%B8%ADJDK%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E5%AF%B9InvocationHandler%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%BC%A0%E5%8F%82/" data-id="ckyx7j30400008cur0ny5dyiq" data-title="关于Spring AOP中JDK动态代理中使用匿名内部类对InvocationHandler接口的传参" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/01/19/Linux/" class="article-date">
@@ -422,6 +495,10 @@
       <ul>
         
           <li>
+            <a href="/2022/01/28/%E5%85%B3%E4%BA%8ESpring-AOP%E4%B8%ADJDK%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB%E5%AF%B9InvocationHandler%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%BC%A0%E5%8F%82/">关于Spring AOP中JDK动态代理中使用匿名内部类对InvocationHandler接口的传参</a>
+          </li>
+        
+          <li>
             <a href="/2022/01/19/Linux/">Linux</a>
           </li>
         
@@ -435,10 +512,6 @@
         
           <li>
             <a href="/2021/12/27/my-new-post/">my new post</a>
-          </li>
-        
-          <li>
-            <a href="/2021/12/27/hello-world/">Hello World</a>
           </li>
         
       </ul>
